@@ -51,6 +51,11 @@ REPORTS
 # TODO: enlist Possible report types
 '''
 
+def get_timers():
+  import os
+  if not os.path.exists('~/.pietimer'):
+    print(colored('No configuration directory found!! creating...', 'yellow'))
+
 @click.group()
 def cli():
     pass
@@ -58,16 +63,19 @@ def cli():
 # ! COMMANDS
 
 # * START COMMAND
-@click.command()
-@click.option('--start', default=None, help='Graphql schema file to clean')
-@click.option('--dst', default=None, help='Graphql schema file path to store the new file')
-def start(src, dst):
-
+@click.command(help='start/resume a timer')
+@click.option('-n', '--name', help='name of the timer to start (task name/identifier)')
+@click.option('-kw', '--keywords', multiple=True, help='categor(y/ies) to put the timer on (ej: work, homework, etc)')
+def start(name, keywords):
+  import datetime as dt
+  # 1. check if timer already exists:
+  timers = get_timers()
+  time = dt.datetime.now()
+  print(colored(f'''started { "'" + name + "' " if name else ""}timer. Keywords: {", ".join(keywords) if keywords else ""}''', color='green'))
+  print(colored(time.isoformat(), color='green'))
 
 def main():
-    cli.add_command(cleanup)
-    cli.add_command(validate_schema)
-    cli.add_command(build_classes)
+    cli.add_command(start)
     cli()
 
 if __name__ == "__main__":
