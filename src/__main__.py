@@ -124,6 +124,21 @@ def init_config_file(config):
   with open(timers_path, 'w+') as config_file:
     config_file.write(serialized_config)
 
+def print_timers(timers):
+  import pydash as __
+  timers_by_status = __.group_by(timers, 'status')
+  active_timers = __.filter_(timers_by_status, {'status': 'running'})
+  paused_timers = __.filter_(timers_by_status, {'status': 'paused'})
+  finished_timers = __.filter_(timers_by_status, {'status': 'finished'})
+  if active_timers:
+    print(colored(f'ACTIVE TIMERS:', 'green'))
+    for timer in active_timers:
+      print(colored(f'\ttimer: {timer[]}', 'white'))
+  if paused_timers:
+    print(colored(f'PAUSED TIMERS:', 'yellow'))
+  if finished_timers:
+    print(colored(f'FINISHED TIMERS:', 'gray'))
+
 @click.group()
 def cli():
   pass
@@ -181,10 +196,25 @@ def start(name, keywords):
     config_file.truncate()
   print(colored(f'timer started successfully! (@ {time.isoformat()})', color='green'))
   
+@click.command(help='List all timers, possibly filtered by status / keywords')
+def _list():
+  import json
+  import datetime as dt
+  import dateutil.parser
+  config = get_config()
+  if not config:
+    print(colored('error reading config file :(\n\naborted mission', 'red'))
+    return
+  timers = config['timers']
+  if not timers:
+    print(colored('no timers ever created, dude', 'yellow'))
+  print_timers(timers)
+
 
 def main():
-    cli.add_command(start)
-    cli()
+  cli.add_command(start)
+  cli.add_command(_list, name='list')
+  cli()
 
 if __name__ == "__main__":
   main()
